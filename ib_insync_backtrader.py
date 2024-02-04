@@ -1,5 +1,6 @@
-from datetime import datetime, date
+from datetime import datetime
 import backtrader as bt
+import backtrader.analyzers as btanalyzers
 import pandas as pd
 from ib_insync import *
 from Learning.algo_trading_components.Backtesting.backtrader.strategies import TestStrategy, TestStrategy2
@@ -20,6 +21,9 @@ df.set_index('date', inplace=True)
 
 cerebro = bt.Cerebro()
 cerebro.addstrategy(TestStrategy2)
+# Analyzer: https://www.backtrader.com/docu/analyzers/analyzers/
+cerebro.addanalyzer(btanalyzers.SharpeRatio, _name='mysharpe')
+
 data = bt.feeds.PandasData(dataname=df)
 cerebro.adddata(data)
 cerebro.broker.setcash(100000.0)
@@ -28,6 +32,8 @@ cerebro.addsizer(bt.sizers.FixedSize, stake=1000)
 # 0.1% ... divide by 100 to remove the %
 cerebro.broker.setcommission(commission=0.001)
 print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
-cerebro.run()
+thestrats = cerebro.run()
 print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
+thestrat = thestrats[0]
+print('Sharpe Ratio:', thestrat.analyzers.mysharpe.get_analysis())
 cerebro.plot()
